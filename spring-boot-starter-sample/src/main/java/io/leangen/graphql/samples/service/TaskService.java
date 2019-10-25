@@ -9,21 +9,23 @@ import io.leangen.graphql.samples.dto.Status;
 import io.leangen.graphql.samples.dto.Task;
 import io.leangen.graphql.samples.dto.Type;
 import io.leangen.graphql.samples.repo.TaskRepo;
-import io.leangen.graphql.spqr.spring.annotation.GraphQLApi;
-import io.leangen.graphql.spqr.spring.util.ConcurrentMultiRegistry;
+import io.leangen.graphql.spqr.spring.annotations.GraphQLApi;
 import org.reactivestreams.Publisher;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @GraphQLApi
 @Service
 public class TaskService {
 
     private final TaskRepo repo;
-    private final ConcurrentMultiRegistry<String, FluxSink<Task>> subscribers = new ConcurrentMultiRegistry<>();
+    private final Map<String, Collection<FluxSink<Task>>> subscribers = new ConcurrentHashMap<>();
 
     public TaskService(TaskRepo repo) {
         this.repo = repo;
@@ -58,6 +60,9 @@ public class TaskService {
 
     @GraphQLSubscription
     public Publisher<Task> taskStatusChanged(String code) {
-        return Flux.create(subscriber -> subscribers.add(code, subscriber.onDispose(() -> subscribers.remove(code, subscriber))), FluxSink.OverflowStrategy.LATEST);
+        subscribers.computeIfAbsent(code, c -> new ArrayList<FluxSink<Task>>());
+        return Flux.create(
+                subscriber -> subscribers.get(code).add(subscriber.onDispose(() -> subscribers.remove(code, subscriber))),
+                FluxSink.OverflowStrategy.LATEST);
     }
 }

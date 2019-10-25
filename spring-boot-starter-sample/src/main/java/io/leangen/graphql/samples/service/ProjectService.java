@@ -8,7 +8,7 @@ import io.leangen.graphql.samples.dto.Project;
 import io.leangen.graphql.samples.dto.Task;
 import io.leangen.graphql.samples.repo.TaskRepo;
 import io.leangen.graphql.samples.repo.ProjectRepo;
-import io.leangen.graphql.spqr.spring.annotation.GraphQLApi;
+import io.leangen.graphql.spqr.spring.annotations.GraphQLApi;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
